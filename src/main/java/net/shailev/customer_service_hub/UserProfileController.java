@@ -1,8 +1,7 @@
 package net.shailev.customer_service_hub;
 
 import jakarta.validation.Valid;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,31 +23,31 @@ public class UserProfileController {
 
     @PostMapping("/agent/customers")
     public UserProfileResponse createCustomer(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @Valid @RequestBody CreateCustomerRequest request
     ) {
-        return userProfileService.createCustomer(userDetails.getUsername(), request);
+        return userProfileService.createCustomer(authentication.getName(), request);
     }
 
     @GetMapping("/agent/customers")
     public List<UserProfileResponse> getCustomers(
-            @AuthenticationPrincipal UserDetails userDetails
+            Authentication authentication
     ) {
-        return userProfileService.getCustomersForActor(userDetails.getUsername());
+        return userProfileService.getCustomersForActor(authentication.getName());
     }
 
     @GetMapping("/profile/me")
     public UserProfileResponse getOwnProfile(
-            @AuthenticationPrincipal UserDetails userDetails
+            Authentication authentication
     ) {
-        return userProfileService.getOwnProfile(userDetails.getUsername());
+        return userProfileService.getOwnProfile(authentication.getName());
     }
 
     @PutMapping("/profile/me")
     public UserProfileResponse updateOwnProfile(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @RequestBody UpdateProfileRequest request
     ) {
-        return userProfileService.updateOwnProfile(userDetails.getUsername(), request);
+        return userProfileService.updateOwnProfile(authentication.getName(), request);
     }
 }

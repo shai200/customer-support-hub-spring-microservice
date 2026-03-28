@@ -8,9 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -39,6 +40,40 @@ class CustomerServiceHubApplicationTests {
 	}
 
 	@Test
+	void oauthTokenIssuedForValidCredentials() throws Exception {
+		mockMvc.perform(post("/oauth/token")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "username": "customer",
+								  "password": "java11"
+								}
+								"""))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.access_token").isString())
+				.andExpect(jsonPath("$.token_type").value("Bearer"));
+	}
+
+	@Test
+	void oauthTokenRejectedForInvalidCredentials() throws Exception {
+		mockMvc.perform(post("/oauth/token")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "username": "customer",
+								  "password": "wrong-password"
+								}
+								"""))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void protectedEndpointRejectsMissingToken() throws Exception {
+		mockMvc.perform(get("/profile/me"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void aliveEndpointIsPublic() throws Exception {
 		mockMvc.perform(get("/alive"))
 				.andExpect(status().isOk())
@@ -47,13 +82,16 @@ class CustomerServiceHubApplicationTests {
 
 	@Test
 	void customerCannotQueryAgentCustomers() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
+
 		mockMvc.perform(get("/agent/customers")
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void agentCanCreateCustomerUnderSelf() throws Exception {
+		String token = oauthToken(AGENT_USERNAME, AGENT_PASSWORD);
 		String username = "customer_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 		String payload = """
 				{
@@ -64,8 +102,7 @@ class CustomerServiceHubApplicationTests {
 				""".formatted(username);
 
 		mockMvc.perform(post("/agent/customers")
-						.with(csrf())
-						.header("Authorization", basic(AGENT_USERNAME, AGENT_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk())
@@ -76,6 +113,7 @@ class CustomerServiceHubApplicationTests {
 
 	@Test
 	void agentCanQueryOwnCustomers() throws Exception {
+		String token = oauthToken(AGENT_USERNAME, AGENT_PASSWORD);
 		String username = "owned_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 		String payload = """
 				{
@@ -86,36 +124,41 @@ class CustomerServiceHubApplicationTests {
 				""".formatted(username);
 
 		mockMvc.perform(post("/agent/customers")
-						.with(csrf())
-						.header("Authorization", basic(AGENT_USERNAME, AGENT_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk());
 
 		mockMvc.perform(get("/agent/customers")
-						.header("Authorization", basic(AGENT_USERNAME, AGENT_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[*].username", hasItem(username)));
 	}
 
 	@Test
 	void developerCanQueryAgentCustomers() throws Exception {
+		String token = oauthToken(DEVELOPER_USERNAME, DEVELOPER_PASSWORD);
+
 		mockMvc.perform(get("/agent/customers")
-						.header("Authorization", basic(DEVELOPER_USERNAME, DEVELOPER_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk());
 	}
 
 	@Test
 	void adminCanQueryAgentCustomers() throws Exception {
+		String token = oauthToken(ADMIN_USERNAME, ADMIN_PASSWORD);
+
 		mockMvc.perform(get("/agent/customers")
-						.header("Authorization", basic(ADMIN_USERNAME, ADMIN_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk());
 	}
 
 	@Test
 	void customerCanQueryOwnProfile() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
+
 		mockMvc.perform(get("/profile/me")
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.username").value(CUSTOMER_USERNAME))
 				.andExpect(jsonPath("$.roleType").value("CUSTOMER"));
@@ -123,6 +166,7 @@ class CustomerServiceHubApplicationTests {
 
 	@Test
 	void customerCanUpdateOwnProfile() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
 		String payload = """
 				{
 				  "fullName": "Customer Updated",
@@ -131,8 +175,7 @@ class CustomerServiceHubApplicationTests {
 				""";
 
 		mockMvc.perform(put("/profile/me")
-						.with(csrf())
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk())
@@ -143,6 +186,7 @@ class CustomerServiceHubApplicationTests {
 
 	@Test
 	void customerCanCreateTicket() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
 		String payload = """
 				{
 				  "title": "Login issue",
@@ -151,8 +195,7 @@ class CustomerServiceHubApplicationTests {
 				""";
 
 		mockMvc.perform(post("/tickets")
-						.with(csrf())
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk())
@@ -162,6 +205,7 @@ class CustomerServiceHubApplicationTests {
 
 	@Test
 	void customerCanGetOwnTickets() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
 		String payload = """
 				{
 				  "title": "Billing question",
@@ -170,20 +214,21 @@ class CustomerServiceHubApplicationTests {
 				""";
 
 		mockMvc.perform(post("/tickets")
-						.with(csrf())
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk());
 
 		mockMvc.perform(get("/tickets")
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[*].title", hasItem("Billing question")));
 	}
 
 	@Test
 	void agentCanSearchTicketsFromOwnCustomers() throws Exception {
+		String customerToken = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
+		String agentToken = oauthToken(DEVELOPER_USERNAME, DEVELOPER_PASSWORD);
 		String payload = """
 				{
 				  "title": "Payment failed",
@@ -192,28 +237,30 @@ class CustomerServiceHubApplicationTests {
 				""";
 
 		mockMvc.perform(post("/tickets")
-						.with(csrf())
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.header("Authorization", bearer(customerToken))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isOk());
 
 		mockMvc.perform(get("/agent/tickets")
 						.param("search", "payment")
-						.header("Authorization", basic(DEVELOPER_USERNAME, DEVELOPER_PASSWORD)))
+						.header("Authorization", bearer(agentToken)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[*].customerUsername", hasItem(CUSTOMER_USERNAME)));
 	}
 
 	@Test
 	void customerCannotQueryAgentTickets() throws Exception {
+		String token = oauthToken(CUSTOMER_USERNAME, CUSTOMER_PASSWORD);
+
 		mockMvc.perform(get("/agent/tickets")
-						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+						.header("Authorization", bearer(token)))
 				.andExpect(status().isForbidden());
 	}
 
 	@Test
 	void agentCannotCreateTicket() throws Exception {
+		String token = oauthToken(AGENT_USERNAME, AGENT_PASSWORD);
 		String payload = """
 				{
 				  "title": "Agent attempt",
@@ -222,17 +269,37 @@ class CustomerServiceHubApplicationTests {
 				""";
 
 		mockMvc.perform(post("/tickets")
-						.with(csrf())
-						.header("Authorization", basic(AGENT_USERNAME, AGENT_PASSWORD))
+						.header("Authorization", bearer(token))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(payload))
 				.andExpect(status().isForbidden());
 	}
 
-	private String basic(String username, String password) {
-		String token = java.util.Base64.getEncoder()
-				.encodeToString((username + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-		return "Basic " + token;
+	private String oauthToken(String username, String password) throws Exception {
+		String payload = """
+				{
+				  "username": "%s",
+				  "password": "%s"
+				}
+				""".formatted(username, password);
+
+		String responseBody = mockMvc.perform(post("/oauth/token")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(payload))
+				.andExpect(status().isOk())
+				.andReturn()
+				.getResponse()
+				.getContentAsString();
+
+		Matcher matcher = Pattern.compile("\"access_token\"\\s*:\\s*\"([^\"]+)\"").matcher(responseBody);
+		if (!matcher.find()) {
+			throw new IllegalStateException("access_token not found in response: " + responseBody);
+		}
+		return matcher.group(1);
+	}
+
+	private String bearer(String token) {
+		return "Bearer " + token;
 	}
 
 }

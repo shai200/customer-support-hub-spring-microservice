@@ -1,8 +1,7 @@
 package net.shailev.customer_service_hub;
 
 import jakarta.validation.Valid;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,24 +23,24 @@ public class TicketController {
 
     @PostMapping("/tickets")
     public TicketResponse createTicket(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @Valid @RequestBody CreateTicketRequest request
     ) {
-        return ticketService.createTicket(userDetails.getUsername(), request);
+        return ticketService.createTicket(authentication.getName(), request);
     }
 
     @GetMapping("/tickets")
     public List<TicketResponse> getOwnTickets(
-            @AuthenticationPrincipal UserDetails userDetails
+            Authentication authentication
     ) {
-        return ticketService.getOwnTickets(userDetails.getUsername());
+        return ticketService.getOwnTickets(authentication.getName());
     }
 
     @GetMapping("/agent/tickets")
     public List<TicketResponse> searchCustomerTickets(
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,
             @RequestParam(name = "search", required = false) String search
     ) {
-        return ticketService.searchAgentCustomerTickets(userDetails.getUsername(), search);
+        return ticketService.searchAgentCustomerTickets(authentication.getName(), search);
     }
 }
