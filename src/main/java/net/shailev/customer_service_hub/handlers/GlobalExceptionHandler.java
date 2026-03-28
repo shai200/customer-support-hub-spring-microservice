@@ -1,7 +1,8 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.handlers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import net.shailev.customer_service_hub.responses.ApiErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;

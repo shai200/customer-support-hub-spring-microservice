@@ -1,4 +1,4 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.jpa;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import net.shailev.customer_service_hub.jpa.UserProfile;
 
 import java.time.Instant;
 

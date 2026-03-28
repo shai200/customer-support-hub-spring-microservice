@@ -1,5 +1,6 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.repositories;
 
+import net.shailev.customer_service_hub.jpa.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

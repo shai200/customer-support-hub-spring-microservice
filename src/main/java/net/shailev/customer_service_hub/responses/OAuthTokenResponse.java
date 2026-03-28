@@ -1,4 +1,4 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.responses;
 
 public record OAuthTokenResponse(
         String access_token,

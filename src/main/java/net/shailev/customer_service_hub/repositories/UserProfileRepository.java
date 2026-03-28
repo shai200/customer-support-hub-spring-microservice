@@ -1,5 +1,7 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.repositories;
 
+import net.shailev.customer_service_hub.jpa.UserProfile;
+import net.shailev.customer_service_hub.types.RoleType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

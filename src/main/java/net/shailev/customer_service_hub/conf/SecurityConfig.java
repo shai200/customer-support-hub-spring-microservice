@@ -1,7 +1,8 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.conf;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import net.shailev.customer_service_hub.types.RoleType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +34,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.time.Instant;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {

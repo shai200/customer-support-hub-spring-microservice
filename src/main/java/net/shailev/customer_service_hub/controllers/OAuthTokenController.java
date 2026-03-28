@@ -1,6 +1,8 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.controllers;
 
 import jakarta.validation.Valid;
+import net.shailev.customer_service_hub.validators.OAuthTokenRequest;
+import net.shailev.customer_service_hub.responses.OAuthTokenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -1,5 +1,8 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.bootstrap;
 
+import net.shailev.customer_service_hub.jpa.UserProfile;
+import net.shailev.customer_service_hub.repositories.UserProfileRepository;
+import net.shailev.customer_service_hub.types.RoleType;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

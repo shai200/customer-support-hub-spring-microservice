@@ -1,7 +1,10 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.controllers;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+import net.shailev.customer_service_hub.validators.CreateTicketRequest;
+import net.shailev.customer_service_hub.responses.TicketResponse;
+import net.shailev.customer_service_hub.services.TicketService;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;

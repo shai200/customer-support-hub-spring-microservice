@@ -1,6 +1,10 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.controllers;
 
 import jakarta.validation.Valid;
+import net.shailev.customer_service_hub.responses.UserProfileResponse;
+import net.shailev.customer_service_hub.services.UserProfileService;
+import net.shailev.customer_service_hub.validators.CreateCustomerRequest;
+import net.shailev.customer_service_hub.validators.UpdateProfileRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

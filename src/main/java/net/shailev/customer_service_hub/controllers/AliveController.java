@@ -1,4 +1,4 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.controllers;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,5 +1,12 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.services;
 
+import net.shailev.customer_service_hub.jpa.Ticket;
+import net.shailev.customer_service_hub.jpa.UserProfile;
+import net.shailev.customer_service_hub.repositories.TicketRepository;
+import net.shailev.customer_service_hub.repositories.UserProfileRepository;
+import net.shailev.customer_service_hub.responses.TicketResponse;
+import net.shailev.customer_service_hub.types.RoleType;
+import net.shailev.customer_service_hub.validators.CreateTicketRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

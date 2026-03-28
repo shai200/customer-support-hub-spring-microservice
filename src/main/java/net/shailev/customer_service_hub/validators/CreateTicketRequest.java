@@ -1,4 +1,4 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.validators;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

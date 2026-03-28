@@ -1,4 +1,6 @@
-package net.shailev.customer_service_hub;
+package net.shailev.customer_service_hub.responses;
+
+import net.shailev.customer_service_hub.types.RoleType;
 
 public record UserProfileResponse(
         Long id,
