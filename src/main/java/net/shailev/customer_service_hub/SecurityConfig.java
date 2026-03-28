@@ -40,6 +40,11 @@ public class SecurityConfig {
                 .roles(ADMIN)
                 .build();
 
+        UserDetails developer = User.withUsername("developer")
+                .password("{noop}developer11")
+                .roles(AGENT)
+                .build();
+
         UserDetails agent = User.withUsername("agent")
                 .password("{noop}agent11")
                 .roles(AGENT)
@@ -50,6 +55,6 @@ public class SecurityConfig {
                 .roles(CUSTOMER)
                 .build();
 
-        return new InMemoryUserDetailsManager(admin, agent, customer);
+                return new InMemoryUserDetailsManager(admin, developer, agent, customer);
     }
 }
