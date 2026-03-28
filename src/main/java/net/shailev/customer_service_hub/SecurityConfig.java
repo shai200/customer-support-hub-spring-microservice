@@ -1,8 +1,12 @@
 package net.shailev.customer_service_hub;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -26,7 +30,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.time.Instant;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -36,7 +43,7 @@ public class SecurityConfig {
         private static final String CUSTOMER = RoleType.CUSTOMER.name();
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -49,6 +56,24 @@ public class SecurityConfig {
                 )
                                 .oauth2ResourceServer(resourceServer -> resourceServer
                                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                                )
+                                .exceptionHandling(exceptions -> exceptions
+                                                .authenticationEntryPoint((request, response, authException) ->
+                                                                writeSecurityErrorResponse(
+                                                                                response,
+                                                                                HttpStatus.UNAUTHORIZED,
+                                                                                "Authentication is required",
+                                                                                request
+                                                                )
+                                                )
+                                                .accessDeniedHandler((request, response, accessDeniedException) ->
+                                                                writeSecurityErrorResponse(
+                                                                                response,
+                                                                                HttpStatus.FORBIDDEN,
+                                                                                "Access denied",
+                                                                                request
+                                                                )
+                                                )
                                 )
                                 .formLogin(AbstractHttpConfigurer::disable)
                                 .httpBasic(AbstractHttpConfigurer::disable);
@@ -115,4 +140,29 @@ public class SecurityConfig {
 
         return new InMemoryUserDetailsManager(admin, developer, agent, customer);
     }
+
+        private void writeSecurityErrorResponse(
+                        HttpServletResponse response,
+                        HttpStatus status,
+                        String message,
+                    HttpServletRequest request
+        ) throws IOException {
+                response.setStatus(status.value());
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                String body = "{" +
+                        "\"timestamp\":\"" + Instant.now() + "\"," +
+                        "\"status\":" + status.value() + "," +
+                        "\"error\":\"" + escapeJson(status.getReasonPhrase()) + "\"," +
+                        "\"message\":\"" + escapeJson(message) + "\"," +
+                        "\"path\":\"" + escapeJson(request.getRequestURI()) + "\"," +
+                        "\"details\":[]" +
+                        "}";
+                response.getWriter().write(body);
+            }
+
+            private String escapeJson(String value) {
+                return value
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"");
+        }
 }

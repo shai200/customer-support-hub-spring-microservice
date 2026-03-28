@@ -70,7 +70,23 @@ class CustomerServiceHubApplicationTests {
 	@Test
 	void protectedEndpointRejectsMissingToken() throws Exception {
 		mockMvc.perform(get("/profile/me"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.message").value("Authentication is required"));
+	}
+
+	@Test
+	void oauthTokenValidationFailsWithReadableMessage() throws Exception {
+		mockMvc.perform(post("/oauth/token")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "username": "",
+								  "password": "java11"
+								}
+								"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Validation failed"))
+				.andExpect(jsonPath("$.details", hasItem("username: username is required")));
 	}
 
 	@Test
@@ -151,6 +167,25 @@ class CustomerServiceHubApplicationTests {
 		mockMvc.perform(get("/agent/customers")
 						.header("Authorization", bearer(token)))
 				.andExpect(status().isOk());
+	}
+
+	@Test
+	void createCustomerWithDuplicateUsernameReturnsConflictWithMessage() throws Exception {
+		String token = oauthToken(ADMIN_USERNAME, ADMIN_PASSWORD);
+
+		mockMvc.perform(post("/agent/customers")
+						.header("Authorization", bearer(token))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "username": "customer",
+								  "fullName": "Duplicate",
+								  "email": "duplicate@example.com",
+								  "agentUsername": "agent"
+								}
+								"""))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message").value("Username already exists"));
 	}
 
 	@Test

@@ -46,7 +46,7 @@ public class UserProfileController {
     @PutMapping("/profile/me")
     public UserProfileResponse updateOwnProfile(
             Authentication authentication,
-            @RequestBody UpdateProfileRequest request
+            @Valid @RequestBody UpdateProfileRequest request
     ) {
         return userProfileService.updateOwnProfile(authentication.getName(), request);
     }
