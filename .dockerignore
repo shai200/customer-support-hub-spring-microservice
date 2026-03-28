@@ -1,0 +1,12 @@
+.git
+.gitignore
+.gradle
+build
+out
+.idea
+.vscode
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
