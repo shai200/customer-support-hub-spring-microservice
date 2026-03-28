@@ -141,6 +141,94 @@ class CustomerServiceHubApplicationTests {
 				.andExpect(jsonPath("$.email").value("customer.updated@example.com"));
 	}
 
+	@Test
+	void customerCanCreateTicket() throws Exception {
+		String payload = """
+				{
+				  "title": "Login issue",
+				  "description": "Unable to log in after password reset"
+				}
+				""";
+
+		mockMvc.perform(post("/tickets")
+						.with(csrf())
+						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(payload))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.title").value("Login issue"))
+				.andExpect(jsonPath("$.customerUsername").value(CUSTOMER_USERNAME));
+	}
+
+	@Test
+	void customerCanGetOwnTickets() throws Exception {
+		String payload = """
+				{
+				  "title": "Billing question",
+				  "description": "Need invoice copy"
+				}
+				""";
+
+		mockMvc.perform(post("/tickets")
+						.with(csrf())
+						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(payload))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/tickets")
+						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[*].title", hasItem("Billing question")));
+	}
+
+	@Test
+	void agentCanSearchTicketsFromOwnCustomers() throws Exception {
+		String payload = """
+				{
+				  "title": "Payment failed",
+				  "description": "Card payment gets declined"
+				}
+				""";
+
+		mockMvc.perform(post("/tickets")
+						.with(csrf())
+						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(payload))
+				.andExpect(status().isOk());
+
+		mockMvc.perform(get("/agent/tickets")
+						.param("search", "payment")
+						.header("Authorization", basic(DEVELOPER_USERNAME, DEVELOPER_PASSWORD)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[*].customerUsername", hasItem(CUSTOMER_USERNAME)));
+	}
+
+	@Test
+	void customerCannotQueryAgentTickets() throws Exception {
+		mockMvc.perform(get("/agent/tickets")
+						.header("Authorization", basic(CUSTOMER_USERNAME, CUSTOMER_PASSWORD)))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void agentCannotCreateTicket() throws Exception {
+		String payload = """
+				{
+				  "title": "Agent attempt",
+				  "description": "Agents should not create tickets"
+				}
+				""";
+
+		mockMvc.perform(post("/tickets")
+						.with(csrf())
+						.header("Authorization", basic(AGENT_USERNAME, AGENT_PASSWORD))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(payload))
+				.andExpect(status().isForbidden());
+	}
+
 	private String basic(String username, String password) {
 		String token = java.util.Base64.getEncoder()
 				.encodeToString((username + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
