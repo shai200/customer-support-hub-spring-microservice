@@ -1,11 +1,12 @@
 package net.shailev.customer_service_hub;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+@RestController
 public class AliveController {
 
-    @RequestMapping(method = RequestMethod.GET, path = "/alive")
+    @GetMapping("/alive")
     public String alive() {
         return "alive";
     }
